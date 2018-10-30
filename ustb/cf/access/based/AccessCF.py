@@ -55,19 +55,19 @@ class AccessCF(CFBase):
     self.SM = MatrixUtil.dot_and(user_i_history, np.transpose(Rm)) #计算user_i 与其他用户相似度矩阵，返回user_i与每个用户的相似度
 
   def recommend(self):
-    user_i_vec = self.SM
+    user_similar_vector = self.SM
     user_id = self.user_id - 1
     Rm = self.Rm
     #1. 查找与user_i最相近的top knn_count 个用户。
     # 这里knn_count + 1是因为其中包含了user_i本身，在后面会去掉。
-    acc_idx = np.argpartition(-user_i_vec, self.knn_count + 1)[:self.knn_count + 1]
-    acc_idx = acc_idx[acc_idx != user_id]
+    knnNeighborsIdx = np.argpartition(-user_similar_vector, self.knn_count + 1)[:self.knn_count + 1]
+    knnNeighborsIdx = knnNeighborsIdx[knnNeighborsIdx != user_id]
     #2.  利用top knn_count 个用户计算出各个item的分数
-    knnNeighborsRating = Rm[acc_idx]
+    knnNeighborsRating = Rm[knnNeighborsIdx]
     acc = np.sum((knnNeighborsRating > 0).astype(np.int), axis=0)
     # 排除用户阅读过的item
-    user_rated = (Rm[user_id] > 0)
-    acc[user_rated == True] = 0
+    user_rated_flags = (Rm[user_id] > 0)
+    acc[user_rated_flags == True] = 0 # trick的做法，将读过的标记为0，其他未读过的通过之前的步骤全都>0
     #3. 利用计算好item分数的向量，向用户推荐可阅读格式的前n_results个item
     return self.convertResult(acc, self.n_results, self.movies)
 
