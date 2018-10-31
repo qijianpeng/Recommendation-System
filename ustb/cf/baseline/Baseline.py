@@ -30,10 +30,11 @@ class Baseline(CFBase):
   def compute(self):
     Rm = self.Rm # user rating matrix.
     lamada2 = self.lamada2 # default 0
-    lamada3 = self.lamada3 # default
-    # 1. computes μ
+    lamada3 = self.lamada3 # default 0
+    # 1. computes μ 计算所有评分的平均值
     avg = np.average(Rm)
     # average errors, R_avg_error[u, i] references to Rate(item_i) for user u.
+    # 计算平均差矩阵， 即 Rm_{i,j} = Rm_{i, j} - μ
     R_avg_error = np.where(Rm > 0, Rm - avg, Rm)
     # 2. computes bi
     #2.1 Compute sum of squared errors for each item.
@@ -52,8 +53,8 @@ class Baseline(CFBase):
 
     # 4. computes bui
     #BUI = avg + BU[user_id] + BI[item_i]
-    SM = avg + BU[self.user_id - 1] + BI
-    self.SM = np.where(SM > 5.0, 5.0, SM)
+    SM = avg + BU[self.user_id - 1] + BI #得到的为user_id对应用户对所有item的评分
+    self.SM = np.where(SM > 5.0, 5.0, SM) #规格化处理，评分最高不会超过5分
 
 
 

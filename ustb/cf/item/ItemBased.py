@@ -31,6 +31,16 @@ class ItemBased(CFBase):
     for unrated_item_id, is_rated in enumerate(user_i_rated):
       if is_rated == False:
         # compute `item_id` similarity by user_i_rated
+        # 通过用户打过分的所有item计算unrated_item的评分。
+        #      i1   i2   i3   i4   i5
+        # i1   1
+        # i2  0.2   1
+        # i3  0.5  0.7   1
+        # i4  0.3  0.9  0.9   1
+        # i5  0.1  0.4  0.3  0.8   1
+        # 假设用户打分记录为 {0, 4, 2, 0, 0}, 0代表未打分
+        # 那么i1的打分为:
+        # [0, 4, 2, 0, 0]·[1, 0.2, 0.5, 0.3, 0.1].T / (0.2 + 0.5) = 2.5
         similarity = np.dot(IS[unrated_item_id, user_i_rated == True], user_i_history[user_i_rated == True])
         user_i_unrated[unrated_item_id] = similarity / np.sum(IS[unrated_item_id, user_i_rated == True])
     return self.convertResult(user_i_unrated, self.n_results, self.movies)
@@ -41,7 +51,7 @@ class ItemBased(CFBase):
     1. Cosine
     2. Pearson
     3. Jaccard
-    
+
     Notes: 为了保持程序思路清晰，并未进行优化。
            一个可行的优化方向应为：只针对user_i未评分过的item计算相似度。
     """
