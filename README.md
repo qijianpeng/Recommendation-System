@@ -1,6 +1,7 @@
 # Collaborative-Filtering-System
 Collaborative Filtering System
- 包含两类：User-based与Item-based.
+
+包含两类：User-based与Item-based.
 
 - User-based:
 1. 按照用户访问记录加权的协同过滤算法个性化电影推荐系统. `python driver.py --method=1`
@@ -27,7 +28,8 @@ Try: `python driver.py --help` on your command line to see what happens!
 
 # Developments
 0. Clone Projects to your local.
-  `git clone git@github.com:qijianpeng/Collaborative-Filtering-System.git`
+
+  `git clone git@github.com:qijianpeng/Collaborative-Filtering-System.git cfs`
 
 1. For PyCharm
 
