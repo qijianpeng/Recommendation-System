@@ -26,7 +26,8 @@ class Nmf(CFBase):
 
   def compute(self):
     """
-    `Rm = PM * QM`
+    `V \approx W * H`
+    NMF计算是通过梯度下降的形式，很容易陷入局部最优，因此每次运行的结果可能不一致。
     :param Rm: N * M rating matrix to estimate.
 
     :param rank: `Q = P_{N * rank} x Q_{rank * M}`
@@ -57,38 +58,12 @@ class Nmf(CFBase):
     # Number of rows and cols
     Uc, Oc = np.shape(Rm)
     # matrix factors
+    # 随机初始化必不可少，最后会收敛
     PM = np.random.rand(Uc, rank)
     QM = np.random.rand(rank, Oc)
-
-    for s in range(0, max_iter):
-      # Gradient descent（Euclidean distance)）
-      # H = H .* (W'*V) ./ ((W'*W)*H);
-      PMT = PM.transpose()
-      QM = np.multiply(QM, np.dot(PMT, Rm)) / np.dot(np.dot(PMT, PM), QM)
-
-      # W = W .* (V*H') ./ (W*(H*H'));
-      QMT = QM.transpose()
-      PM = np.multiply(PM, np.dot(Rm, QMT)) / np.dot(PM, np.dot(QM, QMT))
-
-      # compute losses(SSE)
-      PQ = np.dot(PM, QM)
-      E = Rm - PQ
-
-      #### Magic codes ???
-      # TODO explain these chunks. Converts idea from java.
-      PMmul = beta / 2 * np.dot(PM, np.transpose(PM))
-      QMmul = beta / 2 * np.dot(QM, np.transpose(QM))
-      for i in range(0, Uc):
-        r_i = np.sum(PMmul[i, :])
-        E[i, :] +=  r_i
-      for j in range(0, rank):
-        c_j = np.sum(QMmul[:, j])
-        E[:, j] += c_j
-
-
-      if np.sum(E) < loss:
-        print "OK"
-        break
+    #self.multiplicative(W = PM, H = QM, V = Rm, max_iter = max_iter, loss = loss)
+    #Default additive
+    self.additive(W = PM, H = QM, V = Rm, max_iter = max_iter, loss = loss, eta = alpha, beta = beta)
     self.PM = PM
     self.QM = QM
 
@@ -102,6 +77,54 @@ class Nmf(CFBase):
     res = self.convertResult(user_i_vec, self.n_results, self.movies)
     return res
 
+
+  @classmethod
+  def multiplicative(clz, W, H, V, max_iter, loss):
+    """
+    倍增式计算
+    :return: 
+    """
+    for s in range(0, max_iter):
+      # Gradient descent（Euclidean distance)）
+      # H = H .* (W'*V) ./ ((W'*W)*H);
+      WT = W.transpose()
+      H = np.multiply(H, np.dot(WT, V)) / np.dot(np.dot(WT, W), H)
+
+      # W = W .* (V*H') ./ (W*(H*H'));
+      HT = H.transpose()
+      W = np.multiply(W, np.dot(V, HT)) / np.dot(W, np.dot(H, HT))
+      # compute losses(SSE)
+      WH = np.dot(W, H)
+      E = V - WH
+      ET = E.transpose()
+      _losses = np.sum(np.dot(E, ET))
+      if _losses < loss:
+        print "OK"
+        break
+
+  @classmethod
+  def additive(cls, W, H, V, max_iter = 50, eta = 0.1, beta = 0.1, loss = 0.1):
+    """
+    渐进式计算
+    :param max_iter: 最大迭代次数
+    :param loss: 
+    :return: 
+    """
+    for s in range(0, max_iter):
+      # computes W and H
+      WT = W.transpose()
+      H = H + eta * ( np.dot(WT, V) - (np.dot(np.dot(WT, W), H)))
+
+      HT = H.transpose()
+      W = W + beta * (np.dot(V, HT) / np.dot(np.dot(W, H), HT))
+
+      # compute losses
+      E = (V - np.dot(W, H))
+      ET = E.transpose()
+      _losses = np.sum(np.dot(E, ET))
+      if _losses < loss:
+        print "OK"
+        break
 # import unittest as ut
 # class TestCase(ut.TestCase):
 #   if __name__ == '__main__':
