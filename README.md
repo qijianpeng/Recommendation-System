@@ -34,8 +34,12 @@ git clone git@github.com:qijianpeng/Collaborative-Filtering-System.git cfs
 
 1. **For PyCharm**
 
- 本项目包含目录`.idea`, 已对`sources`及`library`进行添加，可直接打开PyCharm选择
-  导入项目.（Thanks 尚秀同学发现问题～）
+ - 本项目包含目录`.idea`, 已对`sources`及`library`进行添加，可直接打开PyCharm选择导入项目.（Thanks 尚秀同学发现问题～）
+ - Debug 环境：已经默认添加了`python --method=3` nmf方法，其他可以类似仿照, 步骤如下：
+  1. 选择Edit Configurations:
+    ![image](./assets/images/edit_configurations.png)
+  2. 点击弹出窗口左上角+号，Add New Configurations, 按照如下方式配置：
+    ![image](./assets/images/debug_settings.png)
 
 2. **For Others**
 
@@ -44,6 +48,8 @@ git clone git@github.com:qijianpeng/Collaborative-Filtering-System.git cfs
 
 # TODO LISTS
 - :hushed: Evaluator: We need evaluation method(s) to test the result.
+    1. Regularizate results of differents CF methods.
+    2. Evaluate all the results but not a single user for CF methods.
 - :wink: 《Recommender Systems Handbook》 lists many interesting methods, 
   Item-based, User-based are all in Chaptor 4: A Comprehensive Survey of Neighborhodd-based
   Recommendation Methods. 2 categories are not enough to understand RS. Here is
