@@ -30,12 +30,17 @@ from argparse import RawTextHelpFormatter
 import os
 import datetime
 
+import numpy as np
+
 from cf.access.based import AccessCF
 from cf.baseline import Baseline
 from cf.common.CFBase import CFBase
+from cf.evaluator.Convertor import Convertor
+from cf.evaluator.NormalizedLpnormDeviation import NormalizedLpnormDeviation
 from cf.item import ItemBased
 from cf.nmf.based import Nmf as UstbNMF
 from cf.rating.based import RatingCF
+from cf.utils.cfutils import DataUtil
 
 
 def switch_method(method):
@@ -83,7 +88,15 @@ if __name__ == "__main__":
   #2. 计算相似度
   cf.compute()
   #3. 推荐
-  res = cf.recommend()
+  res, res_full = cf.recommend()
 #  endtime = datetime.datetime.now()
   cf.showResult(res) # print results
+  # For evaluating
+  evaluator = NormalizedLpnormDeviation()
+  #p = 2
+  #evaluator.setP(p)
+  real = DataUtil.loadUserTestingData()[input_userID]
+  R, O = Convertor.transformRatingsToMatrix(res_full, real)
+  print "Normalized L", evaluator.p, " norm Deviation is: ", evaluator.evaluate(R, O)
+
 # print 'Time: ', (endtime - starttime).seconds

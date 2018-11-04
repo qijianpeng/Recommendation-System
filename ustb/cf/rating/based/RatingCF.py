@@ -59,7 +59,7 @@ class RatingCF(CFBase):
     acc = np.sum((knnNeighborsRating > 0).astype(np.float), axis=0)
     user_rated = (Rm[user_id] > 0)
     acc[user_rated == True] = 0
-    return self.convertResult(acc, self.n_results, self.movies)
+    return self.convertResult(acc, self.n_results, self.movies), acc
 
 
 

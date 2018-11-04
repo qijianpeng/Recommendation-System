@@ -69,7 +69,7 @@ class AccessCF(CFBase):
     user_rated_flags = (Rm[user_id] > 0)
     acc[user_rated_flags == True] = 0 # trick的做法，将读过的标记为0，其他未读过的通过之前的步骤全都>0
     #3. 利用计算好item分数的向量，向用户推荐可阅读格式的前n_results个item
-    return self.convertResult(acc, self.n_results, self.movies)
+    return self.convertResult(acc, self.n_results, self.movies), acc
 
 # import unittest as ut
 # class TestCase(ut.TestCase):

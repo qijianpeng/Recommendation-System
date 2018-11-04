@@ -75,7 +75,7 @@ class Nmf(CFBase):
     user_rated = (Rm[user_id] > 0)
     user_i_vec[user_rated == True] = 0
     res = self.convertResult(user_i_vec, self.n_results, self.movies)
-    return res
+    return res, user_i_vec
 
 
   @classmethod

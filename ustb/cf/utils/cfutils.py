@@ -17,7 +17,7 @@ class DataUtil(object):
   提供数据相关的工具方法
   """
   @staticmethod
-  def loadData(dataDirStr=os.path.dirname(__file__) + "/../../../data"):
+  def loadData(dataDirStr=os.path.dirname(__file__) + "/../../../data", dataUser=None):
       """
       使用Pandas包加载数据，参考：http://www.gregreda.com/2013/10/26/using-pandas-on-the-movielens-dataset/
       Args:
@@ -39,8 +39,12 @@ class DataUtil(object):
       u_cols = ['user_id', 'age', 'sex', 'occupation', 'zip_code']
       users = pd.read_csv(dataDir + '/ml-100k/u.user', sep='|', names=u_cols)
 
+      # Loading user ratings.
       r_cols = ['user_id', 'movie_id', 'rating', 'unix_timestamp']
-      ratings = pd.read_csv(dataDir + '/ml-100k/u.data', sep='\t', names=r_cols)
+      _dataUser = dataDir + '/ml-100k/ua.base'
+      if(dataUser != None):
+        _dataUser = dataUser
+      ratings = pd.read_csv(_dataUser, sep='\t', names=r_cols)
 
       # the movies file contains columns indicating the movie's genres
       # let's only load the first five columns of the file with usecols
@@ -59,6 +63,26 @@ class DataUtil(object):
       # uM  4  3  0  ...  5
       Rm = full.pivot(index='user_id', columns='movie_id', values='rating').fillna(0).values
       return users, ratings, movies, full, Rm
+
+  @staticmethod
+  def loadUserTestingData(dataDirStr=os.path.dirname(__file__) + "/../../../data", dataFile="/ml-100k/ua.test"):
+    dataPath = os.path.abspath(dataDirStr) + dataFile
+    r_cols = ['user_id', 'movie_id', 'rating', 'unix_timestamp']
+    ratings = pd.read_csv(dataPath, sep='\t', names=r_cols)
+    # Converts to dict. {user_i: {item_j:ratings}}
+    res = {}
+    for index, row in ratings.iterrows():
+      user_id = row['user_id']
+      movie_id = row['movie_id']
+      rating = row['rating']
+      if res.has_key(user_id):
+        pass
+      else:
+        res[user_id] = {}
+      res[user_id][movie_id] = rating
+    return res
+# from ustb.cf.utils.cfutils import MatrixUtil, DataUtil
+# ratings = DataUtil.loadUserTestingData(dataDirStr='/Users/qijianpeng/Documents/git/cfs/data', dataFile='/ml-100k/ua.test')
 
 class MatrixUtil(object):
   """

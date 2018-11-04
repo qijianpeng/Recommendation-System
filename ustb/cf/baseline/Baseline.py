@@ -24,7 +24,7 @@ class Baseline(CFBase):
     user_rated = (self.Rm[self.user_id - 1] > 0)
     user_i_vec[user_rated == True] = 0
     res = self.convertResult(user_i_vec, self.n_results, self.movies)
-    return res
+    return res, user_i_vec
 
 
   def compute(self):

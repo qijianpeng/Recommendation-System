@@ -43,7 +43,7 @@ class ItemBased(CFBase):
         # [0, 4, 2, 0, 0]·[1, 0.2, 0.5, 0.3, 0.1].T / (0.2 + 0.5) = 2.5
         similarity = np.dot(IS[unrated_item_id, user_i_rated == True], user_i_history[user_i_rated == True])
         user_i_unrated[unrated_item_id] = similarity / np.sum(IS[unrated_item_id, user_i_rated == True])
-    return self.convertResult(user_i_unrated, self.n_results, self.movies)
+    return self.convertResult(user_i_unrated, self.n_results, self.movies), user_i_unrated
 
   def compute(self):
     """
