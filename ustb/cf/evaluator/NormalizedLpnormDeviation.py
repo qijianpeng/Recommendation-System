@@ -11,8 +11,8 @@ from cf.evaluator.base.Evaluator import Evaluator
 import numpy as np
 
 """
-p = 2: RMSD
-p = 1: MAD
+p = 2: RMS(Root Mean Squared Error)
+p = 1: MAE(Mean Absolute Error)
 """
 class NormalizedLpnormDeviation(Evaluator):
 
@@ -23,8 +23,8 @@ class NormalizedLpnormDeviation(Evaluator):
   def setP(self, p):
     """
     default p is 2.
-    :param p: 
-    :return: 
+    :param p:
+    :return:
     """
     self.p = p
 
