@@ -42,6 +42,7 @@ git clone git@github.com:qijianpeng/Collaborative-Filtering-System.git cfs
 
 
 # TODO LISTS
+CF:
 - :hushed: Evaluator: We need evaluation method(s) to test the result.
     1. Regularizate results of differents CF methods.
     2. Evaluate all the results but not a single user for CF methods.
@@ -51,6 +52,11 @@ git clone git@github.com:qijianpeng/Collaborative-Filtering-System.git cfs
   a short todo lists:
   1. Content-based methods
   2. Chaptor 5: Advances in Collaborative Filtering.
+- :running: normalization of ratings
+- :running: Page 130, Threshold filtering, should use a pipeline filter way.(Pipeline filtering)
+
+
+
 
 # Feedback
 Just open an issue, we'll reply A.S.A.P.
