@@ -20,7 +20,7 @@ import warnings
 warnings.filterwarnings('ignore', '.*do not.*',)
 
 from common.RS import RS
-from utils import DATA_DIR, ROOT_DIR, PRJ_DIR
+from environments import DATA_DIR, ROOT_DIR, PRJ_DIR
 
 TaggededDocument = gensim.models.doc2vec.TaggedDocument
 
@@ -32,6 +32,9 @@ class Doc2VecBook(RS):
     self.retrain = bool(raw_input("是否重新开始训练？Y/y").lower() == "y")
     self.books_path = str(raw_input("请输入书籍列表文件路径(Default newbook.txt):")
                      or (DATA_DIR + "book/newbook.txt"))
+    # 添加自定义的词库用于分割或重组模块不能处理的词组。
+    # jieba.load_userdict("userdict.txt")
+    # 添加自定义的停用词库，去除句子中的停用词。
     self.stopwords_path = str(raw_input("请输入停用词文件路径(Default stopwords.txt):")
                      or (DATA_DIR + "stopwords.txt"))
     self.stopwords = set(open(self.stopwords_path).read().strip('\n').split('\n'))
@@ -43,21 +46,28 @@ class Doc2VecBook(RS):
 
     # TODO check file if exists.
 
-  def compute(self): #利用训练集生成Doc2Vec模型，并保存
-    self.traning_data = self._corpusProcessing()
+  def compute(self):# 用于获取doc2vec模型
+    self._corpusProcessing() # 语料处理
     if self.retrain:
+      # 利用训练集生成Doc2Vec模型，并保存
       self.model_dm = Doc2VecBook.train(self.traning_data)
     else:
+      # 加载已生成的模型
       self.model_dm = Doc2Vec.load(self.model_path)
 
-  def recommend(self, post_desc):
+  def recommend(self, post_desc, topn = 20):
+    """根据`post_desc`推荐`top-n`的item(id).
+    
+    :param post_desc: 指定岗位的描述文本内容
+    :return: 
+    """
     model_dm = self.model_dm
     stopwords = self.stopwords
     post_desc_words = ' '.join([x for x in jieba.lcut(post_desc) if x not in stopwords])
     # 获得对应的输入句子的向量
     inferred_vector_dm = model_dm.infer_vector(doc_words=post_desc_words)
     # 返回相似的句子
-    sims = model_dm.docvecs.most_similar([inferred_vector_dm], topn=20)
+    sims = model_dm.docvecs.most_similar([inferred_vector_dm], topn=topn)
     # 获取推荐结果
     res = ''
     for count, sim in sims:
@@ -68,7 +78,7 @@ class Doc2VecBook(RS):
     return res
 
 
-  def _corpusProcessing(self):
+  def _corpusProcessing(self):# 语料处理，对书籍分词及打tag
     self.books = open(self.books_path).read().strip(' ')
     print "Cutting words now..."
     self.text = ' '.join([x for x in jieba.lcut(self.books) if x not in self.stopwords])
@@ -77,14 +87,24 @@ class Doc2VecBook(RS):
     for idx, doc in enumerate(word_list):
       tag_doc = TaggededDocument(doc, tags = [idx + 1])
       tag_docs.append(tag_doc)
-    return tag_docs
+    self.traning_data = tag_docs
 
   @classmethod
   def train(clz, traning_data, size = 200, epoch_num = 1):
     MODEL_DIR = ROOT_DIR + "ustb/cb/doc2vec/model_test"
+
+    # D2V参数解释：
+    # min_count：忽略所有单词中单词频率小于这个值的单词。一般为5，语料库少时可设置小一些
+    # window：窗口的尺寸。（句子中当前和预测单词之间的最大距离）
+    # size:特征向量的维度
+    # sample：高频词汇的随机降采样的配置阈值，默认为1e-3，范围是(0,1e-5)。
+    # negative: 如果>0,则会采用negativesampling，用于设置多少个noise words（一般是5-20）。默认值是5。
+    # workers：用于控制训练的并行数。
     model_dm = Doc2Vec(traning_data, min_count = 1, window = 5, size = size,
                        sample = 1e-3, negative = 5, workers = 4, hs = 1, iter = 6)
     print "Training now..."
+    # total_examples：统计句子数
+    # epochs：在语料库上的迭代次数(epochs)。
     model_dm.train(traning_data, total_examples=model_dm.corpus_count, epochs=100)
     model_dm.save(MODEL_DIR)
     model_dm.load

@@ -3,8 +3,8 @@
 
 
 
-from utils import ROOT_DIR
-from utils import DATA_DIR
+from environments import ROOT_DIR
+from environments import DATA_DIR
 import sys
 import gensim
 import jieba
