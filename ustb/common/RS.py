@@ -31,3 +31,10 @@ class RS(object):
     :return: 
     """
     raise NotImplementedError("Recommend method not implemented.")
+
+  def showResult(self, res):
+    """
+    Write results to observable device.
+    :return: 
+    """
+    pass

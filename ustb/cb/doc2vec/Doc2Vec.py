@@ -9,6 +9,9 @@
  
 """
 import os
+
+from common.RS import RS
+
 os.environ["TF_CPP_MIN_LOG_LEVEL"]="3"
 
 import numpy as np
@@ -19,24 +22,29 @@ from gensim.models import Doc2Vec
 import warnings
 warnings.filterwarnings('ignore', '.*do not.*',)
 
-from common.RS import RS
+
 from environments import DATA_DIR, ROOT_DIR, PRJ_DIR
 
 TaggededDocument = gensim.models.doc2vec.TaggedDocument
 
 class Doc2VecBook(RS):
+
+  RES_DIR = ROOT_DIR + "cb/doc2vec/result.txt"
   def __init__(self):
     pass
   def initEnv(self):
     RS.initEnv(self)
     self.retrain = bool(raw_input("是否重新开始训练？Y/y").lower() == "y")
-    self.books_path = str(raw_input("请输入书籍列表文件路径(Default newbook.txt):")
-                     or (DATA_DIR + "book/newbook.txt"))
+    # self.books_path = str(raw_input("请输入书籍列表文件路径(Default newbook.txt):")
+    #                  or (DATA_DIR + "book/newbook.txt"))
+    self.books_path = DATA_DIR + "book/newbook.txt"
     # 添加自定义的词库用于分割或重组模块不能处理的词组。
     # jieba.load_userdict("userdict.txt")
     # 添加自定义的停用词库，去除句子中的停用词。
-    self.stopwords_path = str(raw_input("请输入停用词文件路径(Default stopwords.txt):")
-                     or (DATA_DIR + "stopwords.txt"))
+
+    # self.stopwords_path = str(raw_input("请输入停用词文件路径(Default stopwords.txt):")
+    #                  or (DATA_DIR + "stopwords.txt"))
+    self.stopwords_path = DATA_DIR + "stopwords.txt"
     self.stopwords = set(open(self.stopwords_path).read().strip('\n').split('\n'))
     if self.retrain :
       pass
@@ -70,16 +78,18 @@ class Doc2VecBook(RS):
     sims = model_dm.docvecs.most_similar([inferred_vector_dm], topn=topn)
     # 获取推荐结果
     res = ''
+
     for count, sim in sims:
       #sentence = self.traning_data[count].words
       #print (sentence, sim)
       book_id = str(count + 1)
       res = res + (book_id + ' ')
-    return res
+    return res.strip(' ')
 
 
   def _corpusProcessing(self):# 语料处理，对书籍分词及打tag
     self.books = open(self.books_path).read().strip(' ')
+    self.books_array = np.array(self.books.split('\n'))
     print "Cutting words now..."
     self.text = ' '.join([x for x in jieba.lcut(self.books) if x not in self.stopwords])
     word_list = self.text.split('\n')
@@ -110,29 +120,65 @@ class Doc2VecBook(RS):
     model_dm.load
     return model_dm
 
+  def showResult(self, post_id, res):
+    result = open(Doc2VecBook.RES_DIR, mode='a')
+    t = str(post_id) + '\n'
+    result.write(t)
+    result.write(res)
+    # print to console
+    book_ids = str(res).split(' ')
+    book_idx = np.array([int(idx) - 1 for idx in book_ids], dtype=int)
+    titles = self.books_array[book_idx]
 
-import unittest as ut
-class TestDoc2VecBook(ut.TestCase):
-  if __name__ == '__main__':
-    ut.main()
+    rows = []
+    from texttable import Texttable
+    table = Texttable()  # 创建表格并显示
+    table.set_deco(Texttable.HEADER)
+    table.set_cols_dtype(['t'])
+    table.set_cols_align(["l"])
 
-  def test_doc2vecBook(self):
-    doc2vec_book =  Doc2VecBook()
-    doc2vec_book.initEnv()
-    doc2vec_book.compute()
+    rows = []
+    rows.append(["推荐书籍名称"])
+    for title in titles:
+      rows.append([title])
+      #table.add_row([title])
+    table.add_rows(rows)
+    print(table.draw())
 
-    RES_DIR = ROOT_DIR + "cb/doc2vec/result.txt"
-    post_files_filter = DATA_DIR + 'post/*.txt'
-    post_files = glob.glob(post_files_filter)
-    if os.path.exists(RES_DIR):
-        os.remove(RES_DIR)
-    for idx, post_file in enumerate(post_files):
-      post_id = idx + 1
-      print post_id
-      result = open(RES_DIR, mode='a')
-      t = str(post_id) + '\n'
-      result.write(t)
-      result.close()
-      post_desc = open(post_file).read().strip(' ')
-      res = doc2vec_book.recommend(post_desc)
-      result.write(res)
+if __name__ == '__main__':
+  doc2vec_book = Doc2VecBook()
+  doc2vec_book.initEnv()
+  doc2vec_book.compute()
+  # post_files_filter = DATA_DIR + 'post/*.txt'
+  post_files_filter = ROOT_DIR + 'cb/doc2vec/ceshi/101.txt'
+  post_files = glob.glob(post_files_filter)
+  if os.path.exists(Doc2VecBook.RES_DIR):
+    os.remove(Doc2VecBook.RES_DIR)
+
+  for idx, post_file in enumerate(post_files):
+    post_id = idx + 1
+    post_desc = open(post_file).read().strip(' ')
+    res = doc2vec_book.recommend(post_desc)
+    doc2vec_book.showResult(str(post_id), res)
+
+# import unittest as ut
+# class TestDoc2VecBook(ut.TestCase):
+#   if __name__ == '__main__':
+#     ut.main()
+#
+#   def test_doc2vecBook(self):
+#     doc2vec_book =  Doc2VecBook()
+#     doc2vec_book.initEnv()
+#     doc2vec_book.compute()
+#     #post_files_filter = DATA_DIR + 'post/*.txt'
+#     post_files_filter = ROOT_DIR + 'cb/doc2vec/ceshi/101.txt'
+#     post_files = glob.glob(post_files_filter)
+#     if os.path.exists(Doc2VecBook.RES_DIR):
+#         os.remove(Doc2VecBook.RES_DIR)
+#
+#     for idx, post_file in enumerate(post_files):
+#       post_id = idx + 1
+#       post_desc = open(post_file).read().strip(' ')
+#       res = doc2vec_book.recommend(post_desc)
+#       doc2vec_book.showResult(str(post_id), res)
+

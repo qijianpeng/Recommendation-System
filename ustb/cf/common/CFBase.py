@@ -11,8 +11,10 @@ import numpy as np
 from texttable import Texttable
 
 from cf.utils.cfutils import DataUtil
+from common.RS import RS
 
-class CFBase(object):
+
+class CFBase(RS):
   def __init__(self):
     """
     Default do noting
